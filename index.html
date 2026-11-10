@@ -50,6 +50,16 @@
     /* EDIT: Beige hero background palette. */
     .hero{background-image:linear-gradient(180deg,rgba(238,228,209,.86),rgba(220,204,176,.88)),url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=85');color:var(--navy)}
     .hero .hero-kicker{color:#87652e}.hero h1,.hero h1 span{color:var(--navy)}.hero .hero-sub{color:#344154;text-shadow:none}.hero .hero-agent{color:var(--navy);text-shadow:none}.hero .hero-agent span:last-child{color:#495467}
+
+    /* EDIT: Luxury floating links with a subtle animated gold sheen. */
+    .social-float{gap:10px}
+    .social-float a{position:relative;min-width:176px;overflow:hidden;padding:12px 16px;border:1px solid #d6bd88;border-radius:13px;background-image:linear-gradient(108deg,transparent 34%,rgba(244,223,177,.34) 50%,transparent 66%),linear-gradient(135deg,rgba(28,41,60,.98),rgba(10,18,31,.98));background-size:240% 100%,100% 100%;background-position:-140% 0,0 0;box-shadow:0 11px 28px #08111f66,inset 0 1px 0 #ffffff22;color:#f5e8cb;font-size:.73rem;font-weight:600;letter-spacing:.035em;text-align:center;text-shadow:0 1px 5px #0008;transition:transform .22s,border-color .22s,box-shadow .22s;animation:luxury-link-sheen 5.6s ease-in-out infinite}
+    .social-float a:hover{transform:translateY(-2px);border-color:#f0d59a;box-shadow:0 15px 34px #08111f77,inset 0 1px 0 #ffffff2b}
+    .social-float a:focus-visible{outline:3px solid #e5cb91;outline-offset:3px}
+    .social-float a:nth-child(2){animation-delay:.35s}.social-float a:nth-child(3){animation-delay:.7s}.social-float a:nth-child(4){animation-delay:1.05s}.social-float a:nth-child(5){animation-delay:1.4s}
+    @keyframes luxury-link-sheen{0%,68%,100%{background-position:-140% 0,0 0}30%{background-position:140% 0,0 0}}
+    @media(max-width:620px){.social-float{gap:7px}.social-float a{min-width:152px;padding:10px 12px;border-radius:11px;font-size:.68rem}}
+    @media(prefers-reduced-motion:reduce){.social-float a{animation:none}}
 </style>
 </head>
 <body>
