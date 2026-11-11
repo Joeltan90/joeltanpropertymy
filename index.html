@@ -110,7 +110,7 @@
     /* EDIT: Mobile layout fixes. Keep every content section inside the viewport. */
     @media(max-width:620px){
       .container{width:min(calc(100% - 28px),500px)}
-      .about-grid,.contact-grid{grid-template-columns:minmax(0,1fr);gap:22px;width:100%}
+      .about-grid,.contact-grid{grid-template-columns:minmax(0,1fr);gap:22px}
       .about-copy,.contact-copy{width:100%;min-width:0}
       .about-portrait-wrap{width:min(72%,250px);justify-self:center}
       .stats{grid-template-columns:minmax(0,1fr);gap:9px}
@@ -128,6 +128,12 @@
       footer .footlinks.social-float{position:static;inset:auto;width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:20px 0 0}
       footer .footlinks.social-float a{width:100%;min-width:0;padding:10px 8px;font-size:.68rem;white-space:normal}
       footer .footlinks.social-float a:last-child{grid-column:1/-1;justify-self:center;width:min(100%,220px)}
+      .about-copy h2{font-size:clamp(1.65rem,7vw,2.1rem);line-height:1.18}
+      .hero h1{font-size:clamp(1.9rem,8.4vw,2.4rem);line-height:1.12}
+      .hero h1 .hero-cn{font-size:.78em}
+      .search-panel .search-grid{grid-template-columns:minmax(0,1fr)}
+      .search-panel .search-grid .city-field,.search-panel .search-grid .type-field,.search-panel .search-grid .search-submit{grid-column:auto}
+
     }
 </style>
 </head>
