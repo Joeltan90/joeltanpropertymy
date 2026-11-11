@@ -235,7 +235,7 @@
       tabs.forEach(tab=>tab.addEventListener('click',()=>{tabs.forEach(item=>{const active=item===tab;item.classList.toggle('is-active',active);item.setAttribute('aria-selected',String(active));});Object.entries(panels).forEach(([key,panel])=>{const active=key===tab.dataset.searchTab;panel.hidden=!active;panel.classList.toggle('is-active',active);});}));
       const grid=document.querySelector('#listings .cards');
       const originalCards=[...grid.querySelectorAll('.card')];
-      const canonicalUrl=card=>{const href=card.querySelector('.cardlink')?.href||'';try{const url=new URL(href);return url.origin+url.pathname.replace(/\\/+$/,'').toLowerCase();}catch{return href.toLowerCase();}};
+      const canonicalUrl=card=>{const href=card.querySelector('.cardlink')?.href||'';try{const url=new URL(href);return url.origin+url.pathname.replace(/[/]+$/,'').toLowerCase();}catch{return href.toLowerCase();}};
       const seenUrls=new Set();
       const cards=originalCards.filter(card=>{const url=canonicalUrl(card);if(seenUrls.has(url)){card.remove();return false;}seenUrls.add(url);return true;});
       const sourceOrder=new Map(cards.map((card,index)=>[card,index]));
@@ -245,8 +245,8 @@
       const sortSelect=document.getElementById('listing-sort');
       const searchFeedback=document.getElementById('search-feedback');
       const normalized=value=>String(value||'').normalize('NFKD').toLowerCase().trim();
-      const priceOf=card=>Number((card.querySelector('.price')?.textContent||'').replace(/[^\\d]/g,''))||0;
-      const parseMetric=(card,index)=>Number((card.querySelectorAll('.features span')[index]?.textContent||'').match(/\\d+/)?.[0]||0);
+      const priceOf=card=>Number((card.querySelector('.price')?.textContent||'').replace(/[^0-9]/g,''))||0;
+      const parseMetric=(card,index)=>Number((card.querySelectorAll('.features span')[index]?.textContent||'').match(/[0-9]+/)?.[0]||0);
       const searchState={city:'',type:'',query:'',minPrice:'',maxPrice:'',beds:0,baths:0};
       let currentPage=1;
       let lastMatchCount=0;
