@@ -148,6 +148,21 @@
     .listing-pagination button:disabled{opacity:.45;cursor:not-allowed}
     .listing-page-status{color:var(--muted);font-size:.82rem}
     @media(max-width:620px){.listing-toolbar{align-items:stretch;flex-direction:column;gap:10px}.listing-sort{grid-template-columns:1fr;gap:4px}.listing-pagination{gap:8px}.listing-pagination button{padding:0 10px}}
+
+    /* EDIT: Mobile floating links menu sizing and behavior. */
+    .social-float-links{display:flex;flex-direction:column;gap:9px}
+    .social-menu-toggle{display:none}
+    @media(max-width:620px){
+      body{padding-bottom:0}
+      footer .footlinks.social-float{position:fixed;left:auto;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:40;width:auto;max-width:calc(100vw - 28px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin:0;padding:0;border:0;border-radius:0;background:transparent;backdrop-filter:none;box-shadow:none}
+      .social-menu-toggle{display:grid;place-items:center;width:52px;height:52px;flex:0 0 52px;border:1px solid var(--gold);border-radius:50%;background:linear-gradient(140deg,#ddc18e,#c9a66b);box-shadow:0 8px 22px #07130f40;color:var(--navy);font:700 1.45rem/1 Poppins,sans-serif;cursor:pointer;transition:transform .18s}
+      .social-menu-toggle:hover{transform:translateY(-2px)}
+      .social-menu-toggle:focus-visible{outline:3px solid #e5cb91;outline-offset:3px}
+      .social-float-links{display:none;flex-direction:column;align-items:stretch;gap:7px;width:min(190px,calc(100vw - 72px));max-height:min(55vh,420px);overflow-y:auto;overscroll-behavior:contain;padding:8px;border:1px solid #d6bd88;border-radius:16px;background:rgba(16,29,50,.97);box-shadow:0 14px 32px #08111f60;backdrop-filter:blur(12px)}
+      .social-float.is-open .social-float-links{display:flex}
+      .social-float-links a{width:100%;min-width:0;padding:10px 11px;border-radius:10px;font-size:.68rem;line-height:1.25;white-space:normal}
+    }
+    @media(prefers-reduced-motion:reduce){.social-menu-toggle{transition:none}}
 </style>
 </head>
 <body>
@@ -217,7 +232,7 @@
     <!-- EDIT: Form submits to WhatsApp. Add a backend if lead submissions need to be stored. -->
     <section class="section contact" id="contact"><div class="container contact-grid"><div class="contact-copy"><span class="eyebrow">Start a conversation</span><h2>Tell me what you’re looking for.</h2><p>Share a little about your plans. I’ll get back to you and help you work out a clear next step.</p><p class="detail">WhatsApp: <a href="https://wa.me/60177075731">017-707 5731</a></p><p class="detail">Tan Shi Gian · REN 77649</p></div><form class="form" id="lead-form"><div class="row"><div class="field"><label for="name">Your name</label><input id="name" name="name" autocomplete="name" required placeholder="e.g. Alex Tan"></div><div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+60 12 345 6789"></div></div><div class="field"><label for="message">What are you looking for?</label><textarea id="message" name="message" required placeholder="Preferred area, property type, or plans…"></textarea></div><button class="btn submit" type="submit">Continue in WhatsApp ↗</button><p class="hint">This opens WhatsApp with your details ready to send.</p></form></div></section>
   </main>
-  <!-- EDIT: Update footer social links and year behavior if needed. --><footer><div class="container foot"><div><strong>Joel Tan</strong> · Property Advisor · REN 77649</div><div class="footlinks social-float"><a href="https://nextsix.com/agent/joel-tan/673030d30ae3281a3004a23c" target="_blank" rel="noopener">NextSix profile</a><!-- EDIT: Update Joel’s EdgeProp agent profile URL here. --><a href="https://www.edgeprop.my/agent/107056" target="_blank" rel="noopener">EdgeProp listings</a><a href="https://www.facebook.com/share/1DUQDGp2a4/" target="_blank" rel="noopener">Land &amp; factory Listing</a><!-- EDIT: Update the Facebook destination for house and shop listings here. --><a href="https://www.facebook.com/share/18fRKG7wcu/" target="_blank" rel="noopener">House &amp; shop listing</a><a href="https://wa.me/60177075731">WhatsApp</a></div><div>© <span id="year">2026</span> Joel Tan. All rights reserved.</div></div></footer>
+  <!-- EDIT: Update footer social links and year behavior if needed. --><footer><div class="container foot"><div><strong>Joel Tan</strong> · Property Advisor · REN 77649</div><div class="footlinks social-float" id="floating-nav"><!-- EDIT: Keep the floating property links and their destinations here. --><div class="social-float-links" id="floating-nav-links" aria-label="Property and contact links"><a href="https://nextsix.com/agent/joel-tan/673030d30ae3281a3004a23c" target="_blank" rel="noopener">NextSix Profile</a><!-- EDIT: Update Joel’s EdgeProp agent profile URL here. --><a href="https://www.edgeprop.my/agent/107056" target="_blank" rel="noopener">EdgeProp Listings</a><a href="https://www.facebook.com/share/1DUQDGp2a4/" target="_blank" rel="noopener">Land &amp; Factory Listings</a><!-- EDIT: Update the Facebook destination for house and shop listings here. --><a href="https://www.facebook.com/share/18fRKG7wcu/" target="_blank" rel="noopener">House &amp; Shop Listings</a><a href="https://wa.me/60177075731">WhatsApp</a></div><button class="social-menu-toggle" id="floating-nav-toggle" type="button" aria-label="Open property links" aria-expanded="false" aria-controls="floating-nav-links"><span aria-hidden="true">☰</span></button></div><div>© <span id="year">2026</span> Joel Tan. All rights reserved.</div></div></footer>
   <script>
     // EDIT: Update the destination or message format to change the form's WhatsApp recipient.
     document.getElementById('year').textContent=new Date().getFullYear();
@@ -315,7 +330,25 @@
       document.getElementById('map-city').addEventListener('change',event=>{document.getElementById('map-search-link').href='https://www.google.com/maps/search/'+encodeURIComponent('property '+event.target.value);});
       render();
     })();
-  </script>
+  
+    // EDIT: Control the mobile floating links menu.
+    (function(){
+      const menu=document.getElementById('floating-nav');
+      const toggle=document.getElementById('floating-nav-toggle');
+      const links=document.getElementById('floating-nav-links');
+      if(!menu||!toggle||!links)return;
+      function setOpen(open){
+        menu.classList.toggle('is-open',open);
+        toggle.setAttribute('aria-expanded',String(open));
+        toggle.setAttribute('aria-label',open?'Close property links':'Open property links');
+        toggle.firstElementChild.textContent=open?'×':'☰';
+      }
+      toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
+      links.addEventListener('click',event=>{if(event.target.closest('a'))setOpen(false)});
+      document.addEventListener('click',event=>{if(!menu.contains(event.target))setOpen(false)});
+      document.addEventListener('keydown',event=>{if(event.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){setOpen(false);toggle.focus()}});
+    })();
+</script>
 </body>
 </html>
 
