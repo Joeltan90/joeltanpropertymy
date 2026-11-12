@@ -65,6 +65,35 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
     await evaluate("document.getElementById('more-filters-toggle').click()");
     assert.equal(await evaluate("document.getElementById('min-beds').value"),'3');
    }
+   if(width>620){
+    const floatingState=()=>evaluate("(()=>{const links=[...document.querySelectorAll('#floating-nav-links>a')];return {scroll:document.documentElement.scrollWidth,positions:links.map(e=>{const r=e.getBoundingClientRect();return {width:r.width,left:r.left,right:r.right,top:r.top,bottom:r.bottom}}),card:document.querySelector('#listings .card').getBoundingClientRect().width}})()");
+    await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:0,y:0});
+    await pause(350);
+    const collapsed=await floatingState();
+    assert.equal(collapsed.positions.length,5);
+    for(let i=0;i<5;i++){
+     const rect=collapsed.positions[i];
+     assert.equal(rect.width,50,'Desktop links collapse to 50px');
+     if(i)assert.ok(rect.top>=collapsed.positions[i-1].bottom,'Floating links stack without overlap');
+     await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:(rect.left+rect.right)/2,y:(rect.top+rect.bottom)/2});
+     await pause(350);
+     const expanded=await floatingState();
+     assert.ok(expanded.positions[i].width>200,'Hovered link reveals its full label');
+     assert.equal(expanded.positions[i].right,rect.right,'Expansion stays anchored to the right');
+     assert.ok(expanded.positions[i].left>=0 && expanded.scroll<=width,'Expanded link stays within viewport');
+     assert.equal(expanded.card,collapsed.card,'Expansion does not change page layout');
+     for(let j=0;j<5;j++)if(j!==i)assert.equal(expanded.positions[j].width,50,'Only hovered link expands');
+     if(width===1440&&i===2){const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(profile,'floating-hover.png'),Buffer.from(shot.data,'base64'));}
+     await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:0,y:0});
+     await pause(350);
+     assert.equal((await floatingState()).positions[i].width,50,'Mouse leave collapses link');
+     await evaluate(`document.querySelectorAll('#floating-nav-links>a')[${i}].focus()`);
+     await pause(350);
+     assert.ok((await floatingState()).positions[i].width>200,'Keyboard focus expands link');
+     await evaluate('document.activeElement.blur()');
+     await pause(350);
+    }
+   }
    for(const mode of ['address','map','quick']){
     await evaluate(`document.querySelector('[data-search-tab="${mode}"]').click()`);
     assert.equal(await evaluate(`document.getElementById('${mode==='quick'?'quick':mode}-search-panel').hidden`),false);

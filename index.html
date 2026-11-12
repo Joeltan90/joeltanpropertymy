@@ -266,6 +266,19 @@
       footer .social-float-links{display:flex;width:100%;max-height:none;overflow:visible;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
       .foot{padding-right:0}
     }
+    /* Desktop floating links expand independently toward the left. */
+    @media(min-width:621px){
+      footer .footlinks.social-float{width:50px;align-items:flex-end}
+      footer .social-float-links{width:50px;align-items:flex-end}
+      footer #floating-nav-links>a{display:grid;grid-template-columns:40px max-content;align-items:center;gap:10px;flex:none;width:50px;min-width:0;max-width:calc(100vw - 44px);height:58px;padding:4px;border-radius:13px;text-align:left;white-space:nowrap;transition:width .3s ease,transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+      footer #floating-nav-links>a>img,footer #floating-nav-links .edgeprop-logo-frame{width:40px;max-width:40px;justify-self:center}
+      footer #floating-nav-links>a>img{object-fit:contain}
+      footer #floating-nav-links .edgeprop-logo-frame{height:22.5px}
+      footer #floating-nav-links>a>span:not(.edgeprop-logo-frame){opacity:0;transition:opacity .3s ease}
+      footer #floating-nav-links>a:hover,footer #floating-nav-links>a:focus{width:270px}
+      footer #floating-nav-links>a:hover>span:not(.edgeprop-logo-frame),footer #floating-nav-links>a:focus>span:not(.edgeprop-logo-frame){opacity:1}
+    }
+    @media(min-width:621px) and (prefers-reduced-motion:reduce){footer #floating-nav-links>a,footer #floating-nav-links>a>span:not(.edgeprop-logo-frame){transition:none}}
 </style>
 </head>
 <body>
