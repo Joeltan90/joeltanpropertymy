@@ -276,12 +276,11 @@
       footer #floating-nav-links>a:hover>span:not(.edgeprop-logo-frame),footer #floating-nav-links>a:focus>span:not(.edgeprop-logo-frame){opacity:1}
     }
     @media(min-width:621px) and (prefers-reduced-motion:reduce){footer #floating-nav-links>a,footer #floating-nav-links>a>span:not(.edgeprop-logo-frame){transition:none}}
-    /* Reserve a mobile dock so the restored gold menu never sits over content. */
+    /* Mobile overlay stays outside document flow; only its own panel can scroll. */
     @media(max-width:620px){
-      html{height:100%;overflow:hidden;background:var(--cream)}
-      body{height:calc(var(--mobile-viewport-height,100dvh) - var(--floating-menu-space,80px) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior-y:contain;scroll-padding-top:85px;padding-bottom:0}
       footer .footlinks.social-float{bottom:calc(100dvh - var(--mobile-viewport-height,100dvh) + max(14px,env(safe-area-inset-bottom)))}
       footer .social-float-links{max-height:min(55vh,calc(var(--mobile-viewport-height,100dvh) * .55),420px)}
+      footer .social-float-links>a{flex-shrink:0}
     }
 </style>
 </head>
@@ -502,29 +501,26 @@
       const links=document.getElementById('floating-nav-links');
       if(!menu||!toggle||!links)return;
       const mobile=window.matchMedia('(max-width:620px)');
-      function updateDock(){
+      function updateViewport(){
         if(!mobile.matches)return;
         const viewportHeight=window.visualViewport?.height||window.innerHeight;
         document.documentElement.style.setProperty('--mobile-viewport-height',viewportHeight+'px');
-        const space=Math.ceil(menu.getBoundingClientRect().height)+28;
-        document.documentElement.style.setProperty('--floating-menu-space',space+'px');
       }
       function setOpen(open){
         menu.classList.toggle('is-open',open);
         toggle.setAttribute('aria-expanded',String(open));
         toggle.setAttribute('aria-label',open?'Close property links':'Open property links');
         toggle.firstElementChild.textContent=open?'×':'☰';
-        updateDock();
       }
       toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
       links.addEventListener('click',event=>{if(event.target.closest('a'))setOpen(false)});
       document.addEventListener('click',event=>{if(!menu.contains(event.target))setOpen(false)});
       document.addEventListener('keydown',event=>{if(event.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){setOpen(false);toggle.focus()}});
       document.addEventListener('focusin',event=>{if(mobile.matches&&!menu.contains(event.target)&&event.target.matches('input,select,textarea'))setOpen(false)});
-      window.addEventListener('resize',updateDock);
-      window.visualViewport?.addEventListener('resize',updateDock);
-      mobile.addEventListener('change',()=>{setOpen(false);updateDock()});
-      updateDock();
+      window.addEventListener('resize',updateViewport);
+      window.visualViewport?.addEventListener('resize',updateViewport);
+      mobile.addEventListener('change',()=>{setOpen(false);updateViewport()});
+      updateViewport();
     })();
 </script>
 </body>
