@@ -34,6 +34,7 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
   const send=(method,params={})=>new Promise((resolve,reject)=>{const key=++id;pending.set(key,{resolve,reject});ws.send(JSON.stringify({id:key,method,params}));});
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});assert.ok(!r.exceptionDetails,JSON.stringify(r.exceptionDetails));return r.result.value;};
   await send('Runtime.enable');await send('Page.enable');
+  await send('Emulation.setFocusEmulationEnabled',{enabled:true});
   // External listing images/font services are outside this local layout regression check.
   await send('Network.enable');await send('Network.setBlockedURLs',{urls:['*fonts.googleapis.com*','*fonts.gstatic.com*','*images.unsplash.com*','*img.edgeprop.my*']});
   const outputs=[];
@@ -43,6 +44,7 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
    for(let i=0;i<100;i++){if(await evaluate("document.readyState==='complete' && !!document.getElementById('listing-count') && document.getElementById('listing-count').textContent.includes('matching')"))break;await pause(100);}
    const layout=await evaluate(`(()=>{const ids=['home','listings','about','fieldwork'];return {width:innerWidth,scroll:document.documentElement.scrollWidth,sections:[...document.querySelector('main').children].filter(e=>ids.includes(e.id)).map(e=>e.id),filters:getComputedStyle(document.getElementById('more-filters')).display,broken:[...document.images].filter(e=>e.getAttribute('src').startsWith('assets/')&&e.complete&&!e.naturalWidth).map(e=>e.src)}})()`);
    assert.ok(layout.scroll<=width,`Overflow at ${width}: ${JSON.stringify(layout)}`);
+   assert.ok(await evaluate('document.body.scrollWidth<=document.body.clientWidth'),'Content scrollport has no horizontal overflow');
    assert.deepEqual(layout.sections,width<=620?['home','listings','about','fieldwork']:['about','fieldwork','home','listings']);
    assert.equal(layout.filters,width<=620?'none':'contents');assert.deepEqual(layout.broken,[]);
    if(width<=620){
@@ -53,11 +55,37 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
     assert.equal(await evaluate("getComputedStyle(document.querySelector('#primary-links a:last-child')).display"),'flex');
     await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
     assert.equal(await evaluate("document.getElementById('nav-toggle').getAttribute('aria-expanded')"),'false');
-    assert.ok(await evaluate("(()=>{const e=document.getElementById('floating-nav');return !['fixed','absolute','sticky'].includes(getComputedStyle(e).position)})()"),'Platform links do not overlay inputs');
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('floating-nav')).position"),'fixed');
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('floating-nav-toggle')).display"),'grid');
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('floating-nav-links')).display"),'none');
+    const menuButton=await evaluate("(()=>{const e=document.getElementById('floating-nav-toggle'),r=e.getBoundingClientRect();return {x:(r.left+r.right)/2,y:(r.top+r.bottom)/2,clickable:e.contains(document.elementFromPoint((r.left+r.right)/2,(r.top+r.bottom)/2))}})()");
+    assert.ok(menuButton.clickable,'Gold button is directly clickable');
+    await send('Input.dispatchMouseEvent',{type:'mousePressed',x:menuButton.x,y:menuButton.y,button:'left',clickCount:1});
+    await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:menuButton.x,y:menuButton.y,button:'left',clickCount:1});
+    assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'true');
+    assert.equal(await evaluate("document.querySelectorAll('#floating-nav-links>a').length"),5);
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('floating-nav-links')).display"),'flex');
+    assert.ok(await evaluate("(()=>{const r=document.getElementById('floating-nav-links').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()"),'Expanded menu fits mobile viewport');
+    await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'false');
+    assert.ok(await evaluate("(()=>{const body=document.body.getBoundingClientRect(),button=document.getElementById('floating-nav-toggle').getBoundingClientRect();return body.bottom<=button.top})()"),'Menu trigger has its own area outside the content scrollport');
+    for(let i=0;i<5;i++){
+     await evaluate(`(()=>{document.getElementById('floating-nav-toggle').click();const link=document.querySelectorAll('#floating-nav-links>a')[${i}];link.addEventListener('click',event=>event.preventDefault(),{once:true});link.click()})()`);
+     assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'false','Each platform link closes the menu');
+    }
+    await evaluate("document.getElementById('floating-nav-toggle').click();document.getElementById('floating-nav-toggle').click()");
+    assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'false');
+    await evaluate("document.getElementById('floating-nav-toggle').click();document.getElementById('search-query').focus()");
+    assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'false','Input focus closes the menu');
+    await evaluate("document.getElementById('floating-nav-toggle').click()");
+    assert.ok(await evaluate("(()=>{const content=document.body.getBoundingClientRect(),menu=document.getElementById('floating-nav').getBoundingClientRect();return content.bottom<=menu.top})()"),'Expanded menu has its own area outside content');
+    await evaluate("document.getElementById('search-feedback').click()");
+    assert.equal(await evaluate("document.getElementById('floating-nav-toggle').getAttribute('aria-expanded')"),'false','Outside click closes menu');
     await evaluate("document.documentElement.style.scrollBehavior='auto';document.getElementById('max-price').scrollIntoView({block:'center',behavior:'instant'})");
     assert.ok(await evaluate("(()=>{const e=document.getElementById('max-price'),r=e.getBoundingClientRect();return [[r.left+4,r.top+4],[r.right-4,r.bottom-4],[(r.left+r.right)/2,(r.top+r.bottom)/2]].every(([x,y])=>document.elementFromPoint(x,y)===e)})()"),'Price input remains directly clickable');
     await evaluate("document.getElementById('nav-toggle').click();document.querySelector('#primary-links a[href=\"#listings\"]').click()");
     assert.equal(await evaluate("document.getElementById('nav-toggle').getAttribute('aria-expanded')"),'false');
+    assert.ok(await evaluate("(()=>{document.getElementById('listings').scrollIntoView({block:'start',behavior:'instant'});return document.getElementById('listings').getBoundingClientRect().top>=document.querySelector('header').getBoundingClientRect().bottom})()"),'Anchor destination clears sticky header');
     await evaluate("document.getElementById('more-filters-toggle').click()");
     assert.equal(await evaluate("getComputedStyle(document.getElementById('more-filters')).display"),'grid');
     await evaluate("document.getElementById('min-beds').value='3';document.getElementById('quick-search-panel').requestSubmit()");
@@ -123,7 +151,7 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
    assert.ok((await evaluate("document.querySelector('.mobile-whatsapp').href")).includes('60177075731'));
    await evaluate("window.open=(url)=>{window.testWhatsApp=url};document.getElementById('name').value='Mobile Buyer';document.getElementById('phone').value='0123456789';document.getElementById('message').value='Johor home';document.getElementById('lead-form').requestSubmit()");
    assert.ok(decodeURIComponent(await evaluate('window.testWhatsApp')).includes('Mobile Buyer'));
-   await evaluate('window.scrollTo(0,0)');
+   await evaluate('window.scrollTo(0,0);document.body.scrollTo(0,0)');
    if(width===390||width===1440){const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(profile,`homepage-${width}.png`),Buffer.from(shot.data,'base64'));}
    outputs.push({width,status:'PASS'});
   }

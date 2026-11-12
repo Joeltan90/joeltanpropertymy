@@ -261,9 +261,6 @@
       .nav.is-open .links{display:grid}
       .nav .links a,.nav .links a:nth-child(3){display:flex;align-items:center;min-height:48px;padding:8px 12px;font-size:.95rem;border-radius:8px}
       .nav .links a:hover{background:var(--cream)}
-      footer .footlinks.social-float{position:static;width:100%;max-width:100%;align-items:stretch;margin-top:12px}
-      footer .social-menu-toggle{display:none}
-      footer .social-float-links{display:flex;width:100%;max-height:none;overflow:visible;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
       .foot{padding-right:0}
     }
     /* Desktop floating links expand independently toward the left. */
@@ -279,6 +276,13 @@
       footer #floating-nav-links>a:hover>span:not(.edgeprop-logo-frame),footer #floating-nav-links>a:focus>span:not(.edgeprop-logo-frame){opacity:1}
     }
     @media(min-width:621px) and (prefers-reduced-motion:reduce){footer #floating-nav-links>a,footer #floating-nav-links>a>span:not(.edgeprop-logo-frame){transition:none}}
+    /* Reserve a mobile dock so the restored gold menu never sits over content. */
+    @media(max-width:620px){
+      html{height:100%;overflow:hidden;background:var(--cream)}
+      body{height:calc(var(--mobile-viewport-height,100dvh) - var(--floating-menu-space,80px) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior-y:contain;scroll-padding-top:85px;padding-bottom:0}
+      footer .footlinks.social-float{bottom:calc(100dvh - var(--mobile-viewport-height,100dvh) + max(14px,env(safe-area-inset-bottom)))}
+      footer .social-float-links{max-height:min(55vh,calc(var(--mobile-viewport-height,100dvh) * .55),420px)}
+    }
 </style>
 </head>
 <body>
@@ -497,16 +501,30 @@
       const toggle=document.getElementById('floating-nav-toggle');
       const links=document.getElementById('floating-nav-links');
       if(!menu||!toggle||!links)return;
+      const mobile=window.matchMedia('(max-width:620px)');
+      function updateDock(){
+        if(!mobile.matches)return;
+        const viewportHeight=window.visualViewport?.height||window.innerHeight;
+        document.documentElement.style.setProperty('--mobile-viewport-height',viewportHeight+'px');
+        const space=Math.ceil(menu.getBoundingClientRect().height)+28;
+        document.documentElement.style.setProperty('--floating-menu-space',space+'px');
+      }
       function setOpen(open){
         menu.classList.toggle('is-open',open);
         toggle.setAttribute('aria-expanded',String(open));
         toggle.setAttribute('aria-label',open?'Close property links':'Open property links');
         toggle.firstElementChild.textContent=open?'×':'☰';
+        updateDock();
       }
       toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
       links.addEventListener('click',event=>{if(event.target.closest('a'))setOpen(false)});
       document.addEventListener('click',event=>{if(!menu.contains(event.target))setOpen(false)});
       document.addEventListener('keydown',event=>{if(event.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){setOpen(false);toggle.focus()}});
+      document.addEventListener('focusin',event=>{if(mobile.matches&&!menu.contains(event.target)&&event.target.matches('input,select,textarea'))setOpen(false)});
+      window.addEventListener('resize',updateDock);
+      window.visualViewport?.addEventListener('resize',updateDock);
+      mobile.addEventListener('change',()=>{setOpen(false);updateDock()});
+      updateDock();
     })();
 </script>
 </body>
