@@ -1,0 +1,6 @@
+node_modules/
+.tools/
+.vercel/
+.env*
+!.env.example
+npm-debug.log*
